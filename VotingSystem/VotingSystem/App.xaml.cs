@@ -11,7 +11,7 @@ namespace VotingSystem
         {
             InitializeComponent();
 
-            MainPage = new MainPage();
+            MainPage = new NavigationPage(new Authentication());
         }
 
         protected override void OnStart()

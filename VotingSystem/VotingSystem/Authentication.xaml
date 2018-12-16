@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="VotingSystem.Authentication"
+             Title="Uwierzytelnianie"
+             BackgroundColor="LightSkyBlue">
+
+    <StackLayout>
+        <Entry Placeholder="Login"
+               MaxLength =" 10" 
+               TextChanged="Login_Entered" />
+        <Entry IsPassword="true" 
+               Placeholder="Hasło"
+               TextChanged="Password_Entered" />
+        <Button Text="Zaloguj"
+                HorizontalOptions="Center"
+                VerticalOptions="Center"
+                Clicked="LogIn_Clicked" />
+        <Button Text="Przejdź do wyników"
+                HorizontalOptions="CenterAndExpand"
+                VerticalOptions="CenterAndExpand"
+                Clicked="GoToResults_Clicked" />
+        <Label Text="System głosowania w Samorządzie Doktorantów PŁ"
+               FontAttributes="Italic"
+               HorizontalOptions="EndAndExpand"
+               VerticalOptions="EndAndExpand" />
+    </StackLayout>
+</ContentPage>
