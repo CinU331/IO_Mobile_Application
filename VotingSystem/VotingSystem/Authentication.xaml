@@ -32,6 +32,6 @@
                 BackgroundColor="Silver"/>
         <Image Source="pl.png" 
                HorizontalOptions="Center"
-               VerticalOptions="EndAndExpand"/>
+               VerticalOptions="Fill"/>
     </StackLayout>
 </ContentPage>

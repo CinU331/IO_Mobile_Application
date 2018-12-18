@@ -15,6 +15,7 @@ namespace VotingSystem
         private Label distributionOfVotes;
         private Image attendanceImage;
         private Image distributionOfVotesImage;
+        private Button reset;
 
 		public Results ()
 		{
@@ -31,7 +32,7 @@ namespace VotingSystem
 
         public void ChooseVoting()
         {
-            picker = new Picker { Title = "Wybierz głosowanie:", TextColor = Color.Black, BackgroundColor = Color.Silver};
+            picker = new Picker { Title = "Wybierz głosowanie:", TextColor = Color.Black};
             picker.ItemsSource = Votings;
             picker.SelectedIndexChanged += Picker_SelectedIndexChanged;
         }
@@ -78,10 +79,18 @@ namespace VotingSystem
 
         public void DiplaysResults()
         {
+            reset = new Button
+            {
+                Text = "Wybierz inne głosowanie",
+                TextColor = Color.Black,
+                VerticalOptions = LayoutOptions.End,
+                HorizontalOptions = LayoutOptions.Center
+            };
+            reset.Clicked += async (sender, args) => await Navigation.PushAsync(new Results());
             StackLayout stack = new StackLayout()
             {
                 Orientation = StackOrientation.Vertical,
-                Children = { attendance, attendanceImage, distributionOfVotes, distributionOfVotesImage }
+                Children = { attendance, attendanceImage, distributionOfVotes, distributionOfVotesImage, reset }
             };
             ScrollView scrollView = new ScrollView
             {

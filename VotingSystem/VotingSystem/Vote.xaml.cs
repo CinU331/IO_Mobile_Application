@@ -12,6 +12,7 @@ namespace VotingSystem
         private Picker votingPicker;
         private Picker candidatesPicker;
         private Label choice;
+        private Button reset;
 
         public Vote(string token)
         {
@@ -26,9 +27,10 @@ namespace VotingSystem
             Content = stack;
             authorization = token;
         }
+
         public void ChooseVoting()
         {
-            votingPicker = new Picker { Title = "Wybierz głosowanie:", TextColor = Color.Black, BackgroundColor = Color.Silver };
+            votingPicker = new Picker { Title = "Wybierz głosowanie:", TextColor = Color.Black };
             votingPicker.ItemsSource = Votings;
             votingPicker.SelectedIndexChanged += VotingPicker_SelectedIndexChanged;
         }
@@ -90,10 +92,18 @@ namespace VotingSystem
                 HorizontalOptions = LayoutOptions.Center
             };
             goToResults.Clicked += (sender, args) => GoToResults();
+            reset = new Button
+            {
+                Text = "Wybierz inne głosowanie",
+                TextColor = Color.Black,
+                VerticalOptions = LayoutOptions.Fill,
+                HorizontalOptions = LayoutOptions.Center
+            };
+            reset.Clicked += async (sender, args) => await Navigation.PushAsync(new Vote(authorization));
             StackLayout stack = new StackLayout()
             {
                 Orientation = StackOrientation.Vertical,
-                Children = { choice, candidatesPicker, goToResults }
+                Children = { choice, candidatesPicker, goToResults, reset }
             };
             this.Content = stack;
             if (!Authorizations.Contains(authorization))
