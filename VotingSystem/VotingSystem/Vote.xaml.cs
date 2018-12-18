@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -10,48 +9,42 @@ namespace VotingSystem
     public partial class Vote : ContentPage
     {
         public List<string> Candidates { get; set; }
+        public List<string> Authorizations { get; set; }
 
-        //private Authentication authentication;
+        private string authorization;
+        private Picker picker;
+        private Label choice;
 
-        public Vote()
+        public Vote(string token)
         {
             InitializeComponent();
             AddCandidates();
+            AddAuthorizations();
             AddLayout();
-        }
-
-        public List<string> GetCandidatesList()
-        {
-            return Candidates;
-        }
-
-        public void AddCandidates()
-        {
-            List<string> tmp = new List<string>
+            authorization = token;
+            if (!Authorizations.Contains(authorization))
             {
-                "Janusz",
-                "Mariusz",
-                "Dariusz",
-                "Sanitariusz"
-            };
-            tmp.Sort();
-            Candidates = tmp;
+                picker.IsEnabled = false;
+                choice.Text = "Już oddałeś swój głos.";
+            }
         }
 
         public void AddLayout()
         {
-            Picker picker = new Picker { Title = "Select a candidate" };
+            picker = new Picker { Title = "Select a candidate", TextColor = Color.Black};
             picker.ItemsSource = Candidates;
             picker.SelectedIndexChanged += Picker_SelectedIndexChanged;
-            Label choice = new Label
+            choice = new Label
             {
                 Text = "Proszę wybrać kandydata.",
+                TextColor = Color.Black,
                 VerticalOptions = LayoutOptions.Start,
                 HorizontalOptions = LayoutOptions.Center
             };
             Button goToResults = new Button
             {
                 Text = "Przejdź do wyników",
+                TextColor = Color.Black,
                 VerticalOptions = LayoutOptions.EndAndExpand,
                 HorizontalOptions = LayoutOptions.Center
             };
@@ -63,11 +56,25 @@ namespace VotingSystem
             };
             this.Content = stack;
         }
-        private void Picker_SelectedIndexChanged(object sender, EventArgs e)
+        private async void Picker_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (((Picker)sender).SelectedItem.ToString() == string.Empty)
+                return;
             string candidat = ((Picker)sender).SelectedItem.ToString();
-            //if(CheckIfVoiceHasAlreadyBeenGiven(user))
-            SaveVote(candidat);
+            if(Authorizations.Contains(authorization))
+            {
+                var answer = await DisplayAlert("Potwierdzenie", "Czy na pewno chcesz oddać głos na: " + candidat + "?", "Tak", "Nie");
+                if (answer)
+                {
+                    SaveVote(candidat);
+                    ((Picker)sender).IsEnabled = false;
+                    choice.Text = "Już oddałeś głos";
+                    Authorizations.Remove(authorization);
+                }
+                else
+                    ((Picker)sender).SelectedItem = string.Empty;
+                    //((Picker)sender).SelectedItem = -1;
+            }
         }
 
         public bool CheckIfVoiceHasAlreadyBeenGiven(string user)
@@ -88,8 +95,30 @@ namespace VotingSystem
 
         public async void GoToResults()
         {
-            var page = new Results();
-            await Navigation.PushAsync(page);
+            await Navigation.PushAsync(new Results());
         }
+
+        #region Mocking data
+        public void AddCandidates()
+        {
+            List<string> tmp = new List<string>
+            {
+                "1. Jan Kowalski",
+                "2. Mariusz Nowak",
+                "3. Dariusz Flisak",
+                "4. Notariusz Waluta"
+            };
+            Candidates = tmp;
+        }
+        public void AddAuthorizations()
+        {
+            List<string> tmp = new List<string>
+            {
+                "1a",
+                "2a"
+            };
+            Authorizations = tmp;
+        }
+        #endregion
     }
 }

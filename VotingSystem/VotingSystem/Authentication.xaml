@@ -2,27 +2,36 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="VotingSystem.Authentication"
-             Title="Uwierzytelnianie"
-             BackgroundColor="LightSkyBlue">
+             Title="Uwierzytelnianie">
 
     <StackLayout>
-        <Entry Placeholder="Login"
+        <Entry x:Name="loginEntry"
+               Placeholder="Login"
                MaxLength =" 10" 
-               TextChanged="Login_Entered" />
-        <Entry IsPassword="true" 
+               Keyboard="Numeric"
+               TextChanged="Login_Entered"
+               TextColor="Black"
+               PlaceholderColor="Black"/>
+        <Entry x:Name="passwordEntry"
+               IsPassword="true" 
                Placeholder="Hasło"
-               TextChanged="Password_Entered" />
+               TextChanged="Password_Entered"
+               TextColor="Black"
+               PlaceholderColor="Black"/>
         <Button Text="Zaloguj"
                 HorizontalOptions="Center"
                 VerticalOptions="Center"
-                Clicked="LogIn_Clicked" />
+                Clicked="LogIn_Clicked"
+                TextColor="Black"
+                BackgroundColor="Silver"/>
         <Button Text="Przejdź do wyników"
-                HorizontalOptions="CenterAndExpand"
-                VerticalOptions="CenterAndExpand"
-                Clicked="GoToResults_Clicked" />
-        <Label Text="System głosowania w Samorządzie Doktorantów PŁ"
-               FontAttributes="Italic"
-               HorizontalOptions="EndAndExpand"
-               VerticalOptions="EndAndExpand" />
+                HorizontalOptions="Center"
+                VerticalOptions="EndAndExpand"
+                Clicked="GoToResults_Clicked"
+                TextColor="Black"
+                BackgroundColor="Silver"/>
+        <Image Source="pl.png" 
+               HorizontalOptions="Center"
+               VerticalOptions="EndAndExpand"/>
     </StackLayout>
 </ContentPage>

@@ -1,5 +1,4 @@
-﻿using System;
-using Xamarin.Forms;
+﻿using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
 [assembly: XamlCompilation(XamlCompilationOptions.Compile)]
@@ -11,7 +10,12 @@ namespace VotingSystem
         {
             InitializeComponent();
 
-            MainPage = new NavigationPage(new Authentication());
+            MainPage = new NavigationPage(new Authentication())
+            {
+                BarTextColor = Color.Black,
+                BarBackgroundColor = Color.Silver,
+                BackgroundColor = Color.Brown
+            };
         }
 
         protected override void OnStart()

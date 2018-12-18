@@ -18,7 +18,7 @@ namespace VotingSystem
 			InitializeComponent ();
             attendanceImagePath = "attendance.jpg";
             GetAttendance(attendanceImagePath);
-            distributionOfVotesImagePath = "distributionOfVotes.jpg";
+            distributionOfVotesImagePath = "distributionOfVotes.png";
             GetDistributionOfVotes(distributionOfVotesImagePath);
             DiplaysResults();
         }
@@ -49,7 +49,13 @@ namespace VotingSystem
                 Orientation = StackOrientation.Vertical,
                 Children = { attendance, attendanceImage, distributionOfVotes, distributionOfVotesImage }
             };
-            this.Content = stack;
+            ScrollView scrollView = new ScrollView
+            {
+                Content = stack,
+                VerticalOptions = LayoutOptions.FillAndExpand,
+                Padding = 0
+            };
+            Content = scrollView;
         }
     }
 }
