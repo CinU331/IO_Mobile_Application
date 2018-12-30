@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
+using System.Threading.Tasks;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -13,13 +10,10 @@ namespace VotingSystem
     {
         private string login;
         private string password;
-        private string token;
-        private List<User> users;
 
         public Authentication()
         {
             InitializeComponent();
-            users = User.GetUsers();
         }
 
         protected override void OnAppearing()
@@ -29,7 +23,13 @@ namespace VotingSystem
             password = null;
             passwordEntry.Text = null;
         }
+        public bool TryToLogIn(User user)
+        {
+            bool isEntitled = Task.Run(async () => { return await API.LoginAsync(user); }).Result;
+            return isEntitled;
+        }
 
+        #region Changes
         private void Login_Entered(object sender, EventArgs e)
         {
             login = ((Entry)sender).Text;
@@ -38,111 +38,38 @@ namespace VotingSystem
         {
             password = ((Entry)sender).Text;
         }
+
         private void LogIn_Clicked(object sender, EventArgs args)
         {
             if (login != null && password != null)
             {
-                if (TryToLogIn(login, password))
-                {
-                    GetToken(login);
-                    GoToVoting();
-                }
+                User user = User.CreateUser(login, password);
+                if (TryToLogIn(user))
+                    GoToVoting(user);
                 else
                     DisplayAlert("", "Nieprawidłowe dane.", "OK");
             }
             else
-            {
                 DisplayAlert("", "Wprowadź login oraz hasło.", "OK");
-            }
         }
 
         private void GoToResults_Clicked(object sender, EventArgs e)
         {
             GoToResults();
         }
-        public bool TryToLogIn(string login, string password)
-        {
-            for (int i = 0; i < users.Count; i++)
-            {
-                if (users[i].Login == login && users[i].Password == password)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
+        #endregion
 
-        public void GetToken(string login)
-        {
-            int i = users.FindIndex(item => item.Login == login);
-            token = users[i].Token;
-        }
+        #region GoTo
 
-        public async void GoToVoting()
+        public async void GoToVoting(User user)
         {
-            await Navigation.PushAsync(new Vote(token));
+            await Navigation.PushAsync(new Vote(user.Token));
         }
 
         public async void GoToResults()
         {
             await Navigation.PushAsync(new Results());
         }
-
-
-        public async void Post_Get()
-        {
-            /*        private static readonly string server = "server";
-        private static readonly HttpClient client = new HttpClient();
-        public static async System.Threading.Tasks.Task<bool> LoginAsync(User user)
-        {
-            string content =
-                "{"
-                + "\"login\": " + "\"" + user.Login + "\","
-                + "\"password\": " + "\"" + user.Password + "\"" +
-                "}";
-            HttpRequestMessage httpRequestMessage = new HttpRequestMessage
-            {
-                Method = HttpMethod.Post,
-                RequestUri = new Uri(server + "/login"),
-                Headers =
-                {
-                    {HttpRequestHeader.ContentType.ToString(),"application/json"}
-                },
-                Content = new StringContent(content)
-            };
-            HttpResponseMessage response = client.SendAsync(httpRequestMessage).Result;
-            String responseString = await response.Content.ReadAsStringAsync();
-            Dictionary<string, string> values = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseString);
-            if (values["token"].Length != 0)
-            {
-                user.Token = values["token"];
-                return true;
-            }
-            return false;
-        }*/
-
-            using (var client = new HttpClient())
-            {
-                string content = "login=1&password=admin";
-                StringContent httpContent = new StringContent(content, Encoding.UTF8, "application/x-www-form-urlencoded");
-
-                client.BaseAddress = new Uri("http://localhost:8545/");
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(
-                    new MediaTypeWithQualityHeaderValue("application/json"));
-
-                var response = await client.PostAsync("application/login", httpContent);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    await DisplayAlert("", "Zalogowano się. Token = " + responseContent + ".", "OK");
-                }
-                else
-                {
-                    await DisplayAlert("", "Nie udało się zalogować.", "OK");
-                }
-            }
-        }
+        #endregion
     }
 }

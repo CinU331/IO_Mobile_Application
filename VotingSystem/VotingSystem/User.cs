@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace VotingSystem
+﻿namespace VotingSystem
 {
     public class User
     {
@@ -8,14 +6,14 @@ namespace VotingSystem
         public string Password { get; set; }
         public string Token { get; set; }
 
-        public static List<User> GetUsers()
+        public static User CreateUser(string login, string password)
         {
-            List<User> users = new List<User>
+            User tmp = new User
             {
-                new User() {Login = "123", Password = "123", Token = "1a"},
-                new User() {Login = "321", Password = "321", Token = "1b"}
+                Login = login,
+                Password = password
             };
-            return users;
+            return tmp;
         }
     }
 }

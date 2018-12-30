@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -13,12 +16,16 @@ namespace VotingSystem
         private Picker candidatesPicker;
         private Label choice;
         private Button reset;
+        public List<Ballot> Ballots { get; set; }
+        public Ballot Ballot { get; set; }
+        public Candidate SelectedCandidate { get; set; }
+        public List<Candidate> Candidates { get; set; }
 
         public Vote(string token)
         {
             InitializeComponent();
-            AddVotings();
-            ChooseVoting();
+            AddBallots();
+            ChooseBallot();
             StackLayout stack = new StackLayout()
             {
                 Orientation = StackOrientation.Vertical,
@@ -27,50 +34,24 @@ namespace VotingSystem
             Content = stack;
             authorization = token;
         }
+        public void AddBallots()
+        {
+            Ballots = Task.Run(async () => { return await API.GetBallots(authorization); }).Result;
+        }
 
-        public void ChooseVoting()
+        public void ChooseBallot()
         {
             votingPicker = new Picker { Title = "Wybierz głosowanie:", TextColor = Color.Black };
-            votingPicker.ItemsSource = Votings;
+            votingPicker.ItemsSource = Ballots;
             votingPicker.SelectedIndexChanged += VotingPicker_SelectedIndexChanged;
         }
         private void VotingPicker_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (((Picker)sender).SelectedItem.ToString() == Votings[0])
-            {
-                List<string> tmp = new List<string>
-                {
-                    "1. Jan Kowalski",
-                    "2. Mariusz Nowak",
-                    "3. Dariusz Flisak",
-                    "4. Notariusz Waluta"
-                };
-                Candidates = tmp;
-                List<string> tmp2 = new List<string>
-                {
-                    "1a",
-                    "2a"
-                };
-                Authorizations = tmp2;
-                AddLayout();
-            }
-            else if (((Picker)sender).SelectedItem.ToString() == Votings[1])
-            {
-                List<string> tmp = new List<string>
-                {
-                    "1. Marcin Kowalik",
-                    "2. Mirosław Janys",
-                    "3. Dariusz Flisak"
-                };
-                Candidates = tmp;
-                List<string> tmp2 = new List<string>
-                {
-                    "1b",
-                    "2b"
-                };
-                Authorizations = tmp2;
-                AddLayout();
-            }
+            Ballot = (Ballot)((Picker)sender).SelectedItem;
+            Candidates = Task.Run(async () => { return await API.GetCandidateNamesForBallot(Ballot, authorization); }).Result;
+            AddLayout();
+            if (Ballots.Count <= 1)
+                reset.IsEnabled = false;
         }
         public void AddLayout()
         {
@@ -106,66 +87,45 @@ namespace VotingSystem
                 Children = { choice, candidatesPicker, goToResults, reset }
             };
             this.Content = stack;
-            if (!Authorizations.Contains(authorization))
-            {
-                candidatesPicker.IsEnabled = false;
-                choice.Text = "Już oddałeś swój głos.";
-            }
+            /* if (!Authorizations.Contains(authorization))
+             {
+                 candidatesPicker.IsEnabled = false;
+                 choice.Text = "Już oddałeś swój głos.";
+             }*/
         }
         private async void Picker_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (((Picker)sender).SelectedItem.ToString() == string.Empty)
                 return;
-            string candidat = ((Picker)sender).SelectedItem.ToString();
-            if (Authorizations.Contains(authorization))
+            SelectedCandidate = (Candidate)((Picker)sender).SelectedItem;
+            //if (Authorizations.Contains(authorization))
+            //{
+            var answer = await DisplayAlert("Potwierdzenie", "Czy na pewno chcesz oddać głos na: " + SelectedCandidate.Name + "?", "Tak", "Nie");
+            if (answer)
             {
-                var answer = await DisplayAlert("Potwierdzenie", "Czy na pewno chcesz oddać głos na: " + candidat + "?", "Tak", "Nie");
-                if (answer)
-                {
-                    SaveVote(candidat);
-                    ((Picker)sender).IsEnabled = false;
-                    choice.Text = "Już oddałeś głos";
-                    Authorizations.Remove(authorization);
-                }
-                else
-                    ((Picker)sender).SelectedItem = string.Empty;
+                SaveVote();
+                ((Picker)sender).IsEnabled = false;
+                choice.Text = "Już oddałeś głos";
             }
+            else
+                ((Picker)sender).SelectedItem = string.Empty;
+            //}
         }
 
-        public bool CheckIfVoiceHasAlreadyBeenGiven(string user)
+        public async void SaveVote()
         {
-            return false;
+            await API.Vote(Ballot, SelectedCandidate, authorization);
+            DisplayMessage(SelectedCandidate.Name);
         }
 
-        public bool SaveVote(string candidat)
+        public void DisplayMessage(string candidateName)
         {
-            DisplayMessage(candidat);
-            return true;
-        }
-
-        public void DisplayMessage(string candidat)
-        {
-            DisplayAlert("", "Dziękujemy za oddanie głosu na " + candidat + ".", "OK");
+            DisplayAlert("", "Dziękujemy za oddanie głosu na " + candidateName + ".", "OK");
         }
 
         public async void GoToResults()
         {
             await Navigation.PushAsync(new Results());
         }
-
-        #region Mocking data
-        public List<string> Votings { get; set; }
-        public List<string> Candidates { get; set; }
-        public List<string> Authorizations { get; set; }
-        public void AddVotings()
-        {
-            List<string> tmp = new List<string>
-            {
-                "08.12.2018r",
-                "12.12.2018r"
-            };
-            Votings = tmp;
-        }
-        #endregion
     }
 }
