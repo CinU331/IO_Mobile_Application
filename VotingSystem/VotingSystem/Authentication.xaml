@@ -6,7 +6,7 @@
 
     <StackLayout>
         <Entry x:Name="loginEntry"
-               Placeholder="Login"
+               Placeholder="Identyfikator doktoranta"
                MaxLength =" 10" 
                Keyboard="Numeric"
                TextChanged="Login_Entered"

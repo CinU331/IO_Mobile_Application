@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
 namespace VotingSystem
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
-	public partial class Results : ContentPage
-	{
+    public partial class Results : ContentPage
+    {
         private string attendanceImagePath;
         private string distributionOfVotesImagePath;
         private Picker picker;
@@ -17,11 +18,13 @@ namespace VotingSystem
         private Image distributionOfVotesImage;
         private Button reset;
 
-		public Results ()
-		{
-			InitializeComponent();
-            AddVotings();
-            ChooseVoting();
+        public List<Ballot> Ballots { get; set; }
+
+        public Results()
+        {
+            InitializeComponent();
+            AddBallots();
+            ChooseBallots();
             StackLayout stack = new StackLayout()
             {
                 Orientation = StackOrientation.Vertical,
@@ -30,41 +33,32 @@ namespace VotingSystem
             Content = stack;
         }
 
-        public void ChooseVoting()
+        public void AddBallots()
         {
-            picker = new Picker { Title = "Wybierz głosowanie:", TextColor = Color.Black};
-            picker.ItemsSource = Votings;
+            Ballots = Task.Run(async () => { return await API.GetBallots("xd"); }).Result;
+        }
+
+        public void ChooseBallots()
+        {
+            picker = new Picker { Title = "Wybierz głosowanie:", TextColor = Color.Black };
+            picker.ItemsSource = Ballots;
             picker.SelectedIndexChanged += Picker_SelectedIndexChanged;
         }
 
         private void Picker_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (((Picker)sender).SelectedItem.ToString() == Votings[0])
-            {
-                attendanceImagePath = "attendance.jpg";
-                GetAttendance(attendanceImagePath);
-                distributionOfVotesImagePath = "distributionOfVotes.png";
-                GetDistributionOfVotes(distributionOfVotesImagePath);
-                DiplaysResults();
-            }
-            else if (((Picker)sender).SelectedItem.ToString() == Votings[1])
-            {
-                attendanceImagePath = "attendance2.png";
-                GetAttendance(attendanceImagePath);
-                distributionOfVotesImagePath = "distributionOfVotes2.jpg";
-                GetDistributionOfVotes(distributionOfVotesImagePath);
-                DiplaysResults();
-            }
+            GetAttendance((Ballot)((Picker)sender).SelectedItem);
+            DiplaysResults();
         }
 
-        public void GetAttendance(string path)
+        public void GetAttendance(Ballot ballot)
         {
             attendance = new Label
             {
                 Text = "Frekwencja"
             };
-            attendanceImage = new Image { Aspect = Aspect.AspectFit };
-            attendanceImage.Source = path;
+            attendanceImage = Task.Run(async () => { return await API.GetResultsImage(ballot); }).Result;
+            attendanceImage.Aspect = Aspect.AspectFit;
         }
 
         public void GetDistributionOfVotes(string path)
@@ -90,7 +84,8 @@ namespace VotingSystem
             StackLayout stack = new StackLayout()
             {
                 Orientation = StackOrientation.Vertical,
-                Children = { attendance, attendanceImage, distributionOfVotes, distributionOfVotesImage, reset }
+                //Children = { attendance, attendanceImage, distributionOfVotes, distributionOfVotesImage, reset }
+                Children = { attendance, attendanceImage, reset }
             };
             ScrollView scrollView = new ScrollView
             {
@@ -100,18 +95,5 @@ namespace VotingSystem
             };
             Content = scrollView;
         }
-
-        #region Mocking data
-        public List<string> Votings { get; set; }
-        public void AddVotings()
-        {
-            List<string> tmp = new List<string>
-            {
-                "08.12.2018r",
-                "12.12.2018r"
-            };
-            Votings = tmp;
-        }
-        #endregion
     }
 }
