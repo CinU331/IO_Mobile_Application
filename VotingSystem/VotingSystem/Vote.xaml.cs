@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Threading.Tasks;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
@@ -24,6 +22,7 @@ namespace VotingSystem
         public Vote(string token)
         {
             InitializeComponent();
+            authorization = token;
             AddBallots();
             ChooseBallot();
             StackLayout stack = new StackLayout()
@@ -32,11 +31,10 @@ namespace VotingSystem
                 Children = { votingPicker }
             };
             Content = stack;
-            authorization = token;
         }
         public void AddBallots()
         {
-            Ballots = Task.Run(async () => { return await API.GetBallots(authorization); }).Result;
+            Ballots = Task.Run(async () => { return await API.GetBallots(); }).Result;
         }
 
         public void ChooseBallot()
@@ -48,7 +46,7 @@ namespace VotingSystem
         private void VotingPicker_SelectedIndexChanged(object sender, EventArgs e)
         {
             Ballot = (Ballot)((Picker)sender).SelectedItem;
-            Candidates = Task.Run(async () => { return await API.GetCandidateNamesForBallot(Ballot, authorization); }).Result;
+            Candidates = Task.Run(async () => { return await API.GetCandidateNamesForBallot(Ballot); }).Result;
             AddLayout();
             if (Ballots.Count <= 1)
                 reset.IsEnabled = false;
@@ -87,40 +85,42 @@ namespace VotingSystem
                 Children = { choice, candidatesPicker, goToResults, reset }
             };
             this.Content = stack;
-            /* if (!Authorizations.Contains(authorization))
-             {
-                 candidatesPicker.IsEnabled = false;
-                 choice.Text = "Już oddałeś swój głos.";
-             }*/
         }
         private async void Picker_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (((Picker)sender).SelectedItem.ToString() == string.Empty)
                 return;
             SelectedCandidate = (Candidate)((Picker)sender).SelectedItem;
-            //if (Authorizations.Contains(authorization))
-            //{
             var answer = await DisplayAlert("Potwierdzenie", "Czy na pewno chcesz oddać głos na: " + SelectedCandidate.Name + "?", "Tak", "Nie");
             if (answer)
             {
-                SaveVote();
-                ((Picker)sender).IsEnabled = false;
-                choice.Text = "Już oddałeś głos";
+                if (SaveVote())
+                {
+                    DisplayMessage(SelectedCandidate.Name);
+                    ((Picker)sender).IsEnabled = false;
+                    choice.Text = "Już oddałeś głos";
+                }
+                else
+                    DisplayMes();
             }
             else
                 ((Picker)sender).SelectedItem = string.Empty;
-            //}
         }
 
-        public async void SaveVote()
+        public bool SaveVote()
         {
-            await API.Vote(Ballot, SelectedCandidate, authorization);
-            DisplayMessage(SelectedCandidate.Name);
+            bool vote = Task.Run(async () => { return await API.Vote(Ballot, SelectedCandidate, authorization); }).Result;
+            return vote;
         }
 
         public void DisplayMessage(string candidateName)
         {
             DisplayAlert("", "Dziękujemy za oddanie głosu na " + candidateName + ".", "OK");
+        }
+
+        public void DisplayMes()
+        {
+            DisplayAlert("", "Wystąpił błąd. Można oddać tylko jeden głos", "OK");
         }
 
         public async void GoToResults()

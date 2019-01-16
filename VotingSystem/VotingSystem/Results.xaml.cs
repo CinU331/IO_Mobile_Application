@@ -9,13 +9,8 @@ namespace VotingSystem
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class Results : ContentPage
     {
-        private string attendanceImagePath;
-        private string distributionOfVotesImagePath;
         private Picker picker;
-        private Label attendance;
-        private Label distributionOfVotes;
-        private Image attendanceImage;
-        private Image distributionOfVotesImage;
+        private Image resultsImage;
         private Button reset;
 
         public List<Ballot> Ballots { get; set; }
@@ -35,7 +30,12 @@ namespace VotingSystem
 
         public void AddBallots()
         {
-            Ballots = Task.Run(async () => { return await API.GetBallots("xd"); }).Result;
+            Ballots = Task.Run(async () => { return await API.GetBallots(); }).Result;
+            for (int i = 0; i < Ballots.Count; i++)
+            {
+                if (Ballots[i].state == true)
+                    Ballots.RemoveAt(i);
+            }
         }
 
         public void ChooseBallots()
@@ -47,28 +47,17 @@ namespace VotingSystem
 
         private void Picker_SelectedIndexChanged(object sender, EventArgs e)
         {
-            GetAttendance((Ballot)((Picker)sender).SelectedItem);
+            GetResultsInPng((Ballot)((Picker)sender).SelectedItem);
             DiplaysResults();
         }
 
-        public void GetAttendance(Ballot ballot)
+        public void GetResultsInPng(Ballot ballot)
         {
-            attendance = new Label
-            {
-                Text = "Frekwencja"
-            };
-            attendanceImage = Task.Run(async () => { return await API.GetResultsImage(ballot); }).Result;
-            attendanceImage.Aspect = Aspect.AspectFit;
-        }
-
-        public void GetDistributionOfVotes(string path)
-        {
-            distributionOfVotes = new Label
-            {
-                Text = "Rozkład"
-            };
-            distributionOfVotesImage = new Image { Aspect = Aspect.AspectFit };
-            distributionOfVotesImage.Source = path;
+            resultsImage = Task.Run(async () => { return await API.GetResultsImage(ballot); }).Result;
+            if (resultsImage == null)
+                DisplayAlert("", "Wystąpił błąd. Nie można było pobrać wyników.", "OK");
+            else
+                resultsImage.Aspect = Aspect.AspectFit;
         }
 
         public void DiplaysResults()
@@ -81,12 +70,24 @@ namespace VotingSystem
                 HorizontalOptions = LayoutOptions.Center
             };
             reset.Clicked += async (sender, args) => await Navigation.PushAsync(new Results());
-            StackLayout stack = new StackLayout()
+            StackLayout stack;
+            if (resultsImage != null)
             {
-                Orientation = StackOrientation.Vertical,
-                //Children = { attendance, attendanceImage, distributionOfVotes, distributionOfVotesImage, reset }
-                Children = { attendance, attendanceImage, reset }
-            };
+                stack = new StackLayout()
+                {
+                    Orientation = StackOrientation.Vertical,
+                    Children = { resultsImage, reset }
+                };
+            }
+            else
+            {
+                stack = new StackLayout()
+                {
+                    Orientation = StackOrientation.Vertical,
+                    Children = { reset }
+                };
+            }
+
             ScrollView scrollView = new ScrollView
             {
                 Content = stack,
